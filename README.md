@@ -1,6 +1,6 @@
 # Japanese Railway Translation API
 
-A FastAPI-based service for translating Japanese railway announcements to English with intelligent entity handling.
+A FastAPI-based service for translating Japanese railway announcements to English.
 
 ## Overview
 
@@ -241,6 +241,8 @@ REQUEST_TIMEOUT=30
 
 The API follows a sophisticated translation pipeline:
 
+![Translation Process Diagram](https://i.ibb.co/pBJzYTqT/Untitled-1.png)
+
 1. **Entity Recognition**: Identifies railway entities (stations, lines) in the input text
 2. **Entity Normalization**: Normalizes entity names (removes suffixes, splits numbers)
 3. **Placeholder Replacement**: Replaces entities with placeholders in the text
@@ -338,19 +340,3 @@ pip install pytest pytest-asyncio httpx
 # Run tests
 pytest tests/
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support, please create an issue in the repository or contact the development team.
