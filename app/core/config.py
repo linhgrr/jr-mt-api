@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     
     # Model settings
     ner_model_name: str = "linhdzqua148/xlm-roberta-ner-japanese-railway"
-    translation_model_name: str = "linhdzqua148/opus-mt-ja-en-railway-7"
+    translation_model_name: str = "linhdzqua148/jrw-mt-ja-en"
     
     # Entity mapping
     entity_csv_path: str = "./train_entity.csv"

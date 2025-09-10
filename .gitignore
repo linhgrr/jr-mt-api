@@ -52,7 +52,6 @@ logs/
 
 # Model cache
 .cache/
-models/
 
 # Docker
 .dockerignore

@@ -49,30 +49,36 @@ class TranslationService:
             return ""
         
         try:
-            inputs = self.tokenizer(
-                [text],
-                return_tensors="pt",
-                padding=True,
-                truncation=True,
-                max_length=128
-            ).to(self.device)
-            
-            with torch.no_grad():
-                generated = self.model.generate(
-                    **inputs,
-                    max_length=128,
-                    num_beams=6,
-                    length_penalty=0.8,
-                    early_stopping=True,
-                    do_sample=False
-                )
-            
-            result = self.tokenizer.decode(generated[0], skip_special_tokens=True).strip()
-            return result
-            
-        except Exception as e:
+            return self.translate(text)
+        except Exception:
             # Return original text if translation fails
             return text
+
+    def translate(self, text: str, src_lang: str = "jpn_Jpan", tgt_lang: str = "eng_Latn", max_len: int = 128) -> str:
+        """
+        Core translation using tokenizer + model.generate with forced BOS token.
+        Mirrors the requested signature and behavior.
+        """
+        inputs = self.tokenizer(
+            text,
+            return_tensors="pt",
+            max_length=max_len,
+            truncation=True
+        ).to(self.device)
+
+        with torch.no_grad():
+            generated_tokens = self.model.generate(
+                **inputs,
+                forced_bos_token_id=self.tokenizer.convert_tokens_to_ids(tgt_lang),
+                max_length=max_len
+            )
+
+        translation = self.tokenizer.batch_decode(
+            generated_tokens,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=True
+        )[0]
+        return translation
     
     def translate_entities_with_fallback(self, ph2ent: Dict[str, str]) -> Tuple[Dict[str, str], Dict[str, str]]:
         """

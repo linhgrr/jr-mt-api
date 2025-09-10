@@ -224,7 +224,7 @@ APP_NAME="Japanese Railway Translation API"
 
 # Model Settings
 NER_MODEL_NAME="linhdzqua148/xlm-roberta-ner-japanese-railway"
-TRANSLATION_MODEL_NAME="linhdzqua148/opus-mt-ja-en-railway-7"
+TRANSLATION_MODEL_NAME="linhdzqua148/jrw-mt-ja-en"
 
 # File Paths
 ENTITY_CSV_PATH="./train_entity.csv"
@@ -259,7 +259,7 @@ The API follows a sophisticated translation pipeline:
 - **NER Model**: `linhdzqua148/xlm-roberta-ner-japanese-railway`
   - Fine-tuned XLM-RoBERTa for Japanese railway entity recognition
   
-- **Translation Model**: `linhdzqua148/opus-mt-ja-en-railway-7`
+- **Translation Model**: `linhdzqua148/jrw-mt-ja-en`
   - Fine-tuned MarianMT for Japanese-English railway domain translation
 
 ## Performance
