@@ -5,6 +5,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from typing import List, Tuple, Dict
 import MeCab
+from loguru import logger
 
 from ..core.config import get_settings
 from ..utils.text_processing import setup_mecab, tokenize_japanese_text, normalize_entity
@@ -27,13 +28,16 @@ class NERService:
     
     def _load_models(self) -> None:
         """Load NER model and tokenizer."""
+        logger.info(f"Loading NER models: {self.settings.ner_model_name}")
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(self.settings.ner_model_name)
             self.model = AutoModelForTokenClassification.from_pretrained(
                 self.settings.ner_model_name
             ).to(self.device)
             self.model.eval()
+            logger.info("NER models loaded successfully")
         except Exception as e:
+            logger.error(f"Failed to load NER models: {e}")
             raise RuntimeError(f"Failed to load NER models: {e}")
     
     def predict_entities(self, text_tokens: List[str]) -> List[Tuple[str, str]]:
@@ -168,24 +172,32 @@ class NERService:
         Returns:
             Tuple of (text_with_placeholders, placeholder_to_entity_mapping)
         """
+        logger.info(f"Starting entity extraction: text_length={len(text)}")
+        
         try:
             # Tokenize
             tokens = tokenize_japanese_text(text, self.mecab)
+            logger.debug(f"Text tokenized: token_count={len(tokens)}")
             
             # Predict entities
             predicted = self.predict_entities(tokens)
+            logger.debug(f"Entity prediction completed: predictions={len(predicted)}")
             
             # Extract and normalize entities
             normalized_entities = self.extract_and_normalize_entities(predicted)
+            logger.info(f"Entities normalized: entity_count={len(normalized_entities)}, entities={normalized_entities}")
             
             # Create placeholder mapping
             ph2ent, ent2ph = self.create_placeholder_mapping(text, normalized_entities)
+            logger.debug(f"Placeholder mapping created: mapping_count={len(ph2ent)}")
             
             # Mask text
             final_text = self.mask_text_with_placeholders(text, ent2ph)
+            logger.info(f"Entity extraction completed: placeholders_created={len(ph2ent)}")
             
             return final_text, ph2ent
             
         except Exception as e:
+            logger.error(f"Entity extraction failed: {str(e)}")
             # Return original text if processing fails
             return text, {}

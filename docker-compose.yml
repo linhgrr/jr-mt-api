@@ -10,8 +10,10 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=false
+      - HF_HOME=/home/app/.cache/huggingface
     volumes:
       - ./train_entity.csv:/app/train_entity.csv:ro
+      - huggingface_cache:/home/app/.cache/huggingface
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
@@ -19,3 +21,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+volumes:
+  huggingface_cache:

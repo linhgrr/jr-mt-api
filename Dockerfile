@@ -5,6 +5,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
+ENV HF_HOME=/home/app/.cache/huggingface
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -13,7 +14,8 @@ RUN apt-get update && apt-get install -y \
     libmecab-dev \
     build-essential \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /etc/mecabrc /usr/local/etc/mecabrc
 
 # Set working directory
 WORKDIR /app
@@ -30,7 +32,9 @@ COPY . .
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash app && \
-    chown -R app:app /app
+    chown -R app:app /app && \
+    mkdir -p /home/app/.cache/huggingface && \
+    chown -R app:app /home/app/.cache
 USER app
 
 # Expose port

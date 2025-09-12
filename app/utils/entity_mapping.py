@@ -6,6 +6,7 @@ import requests
 import re
 from typing import Dict, Optional
 from functools import lru_cache
+from loguru import logger
 
 
 def load_entity_mapping_from_csv(file_path: str) -> Dict[str, str]:
@@ -18,6 +19,8 @@ def load_entity_mapping_from_csv(file_path: str) -> Dict[str, str]:
     Returns:
         Dictionary mapping Japanese entities to English
     """
+    logger.info(f"Loading entity mapping from CSV: {file_path}")
+    
     try:
         df = pd.read_csv(file_path, encoding='utf-8')
         
@@ -27,10 +30,12 @@ def load_entity_mapping_from_csv(file_path: str) -> Dict[str, str]:
         
         # Create mapping dictionary
         entity_mapping = dict(zip(df_clean['kanji'], df_clean['english']))
+        logger.info(f"Entity mapping loaded successfully: {len(entity_mapping)} mappings")
         
         return entity_mapping
         
     except Exception as e:
+        logger.error(f"Failed to load entity mapping from {file_path}: {e}")
         raise FileNotFoundError(f"Failed to load entity mapping from {file_path}: {e}")
 
 
@@ -140,14 +145,21 @@ def translate_entity_with_fallback(
     if not japanese_entity:
         return ""
     
+    logger.debug(f"Translating entity: {japanese_entity}")
+    
     # Try CSV mapping first
     if japanese_entity in csv_mapping:
-        return csv_mapping[japanese_entity]
+        result = csv_mapping[japanese_entity]
+        logger.debug(f"Entity found in CSV mapping: {japanese_entity} -> {result}")
+        return result
     
     # Try Wikidata
+    logger.debug(f"Entity not in CSV, trying Wikidata: {japanese_entity}")
     wikidata_result = get_entity_from_wikidata(japanese_entity)
     if wikidata_result:
+        logger.info(f"Entity translated via Wikidata: {japanese_entity} -> {wikidata_result}")
         return wikidata_result
     
     # Return original if no translation found
+    logger.debug(f"Entity translation not found, keeping original: {japanese_entity}")
     return japanese_entity

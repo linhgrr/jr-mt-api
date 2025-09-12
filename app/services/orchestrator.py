@@ -2,6 +2,7 @@
 Main translation orchestrator service.
 """
 from typing import Optional
+from loguru import logger
 
 from .ner_service import NERService
 from .translation_service import TranslationService
@@ -39,20 +40,27 @@ class TranslationOrchestrator:
         Returns:
             Translated English text
         """
+        logger.info(f"Starting translation orchestration: input_length={len(japanese_text)}")
+        
         try:
             # Step 1: Extract entities and create placeholders
+            logger.info("Step 1: Extracting entities and creating placeholders")
             text_with_placeholders, ph2ent = self.ner_service.extract_entities_with_placeholders(
                 japanese_text
             )
+            logger.info(f"Entities extracted: count={len(ph2ent)}, entities={list(ph2ent.values())}")
             
             # Step 2: Translate with entity handling
+            logger.info("Step 2: Translating with entity handling")
             result = self.translation_service.translate_with_entity_handling(
                 japanese_text, text_with_placeholders, ph2ent
             )
+            logger.info("Translation pipeline completed successfully")
             
             return result
             
         except Exception as e:
+            logger.error(f"Translation pipeline failed, using fallback: {str(e)}")
             # Fallback to simple translation
             return self.translation_service.translate_text_simple(japanese_text)
 

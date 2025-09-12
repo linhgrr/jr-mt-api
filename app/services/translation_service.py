@@ -4,6 +4,7 @@ Translation service for Japanese to English translation.
 import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from typing import Dict, Tuple
+from loguru import logger
 
 from ..core.config import get_settings
 from ..utils.text_processing import remove_adjacent_duplicate_phrases
@@ -26,13 +27,23 @@ class TranslationService:
     
     def _load_models(self) -> None:
         """Load translation model and tokenizer."""
+        logger.info(f"Loading translation models: {self.settings.translation_model_name}")
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.settings.translation_model_name)
+            # Load tokenizer with trust_remote_code to handle custom configs
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.settings.translation_model_name,
+                trust_remote_code=True
+            )
+            # Load model with trust_remote_code and force_download to avoid config issues
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
-                self.settings.translation_model_name
+                self.settings.translation_model_name,
+                trust_remote_code=True,
+                local_files_only=False
             ).to(self.device)
             self.model.eval()
+            logger.info("Translation models loaded successfully")
         except Exception as e:
+            logger.error(f"Failed to load translation models: {e}")
             raise RuntimeError(f"Failed to load translation models: {e}")
     
     def translate_text_simple(self, text: str) -> str:
@@ -176,24 +187,33 @@ class TranslationService:
         Returns:
             Final translated English text
         """
+        logger.info(f"Starting translation with entity handling: entities_count={len(ph2ent)}")
+        
         try:
             if not ph2ent:
+                logger.info("No entities found, using direct translation")
                 # No entities found, translate directly
                 return self.translate_text_simple(text)
             
             # Translate entities
+            logger.info("Translating entities with fallback")
             translated_entities, entities_to_restore = self.translate_entities_with_fallback(ph2ent)
+            logger.info(f"Entity translation completed: translated={len(translated_entities)}, to_restore={len(entities_to_restore)}")
             
             # Restore untranslated entities and translate text
+            logger.info("Restoring entities and translating text")
             final_text, translated_text, final_ph2ent = self.restore_entities_and_translate(
                 text_with_placeholders, entities_to_restore, translated_entities
             )
             
             # Merge results
+            logger.info("Merging translation with entities")
             final_result = self.merge_translation_with_entities(translated_text, final_ph2ent)
+            logger.info("Entity handling translation completed successfully")
             
             return final_result
             
-        except Exception:
+        except Exception as e:
+            logger.error(f"Entity handling translation failed: {str(e)}")
             # Fallback to simple translation
             return self.translate_text_simple(text)

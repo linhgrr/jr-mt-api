@@ -3,6 +3,7 @@ Translation API router.
 """
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from loguru import logger
 
 from ..models.translation_models import TranslateRequest, TranslateResponse, ErrorResponse
 from ..services.orchestrator import translation_orchestrator
@@ -37,22 +38,28 @@ async def translate_text(
     This endpoint handles Japanese railway announcements and translates them to English
     while properly handling railway entities like station names and line names.
     """
+    logger.info(f"Translation request received: text_length={len(request.text)}")
+    
     try:
         # Validate input length
         if len(request.text) > settings.max_text_length:
+            logger.warning(f"Text too long: {len(request.text)} > {settings.max_text_length}")
             raise HTTPException(
                 status_code=400,
                 detail=f"Text too long. Maximum length is {settings.max_text_length} characters."
             )
         
         # Perform translation
+        logger.info("Starting translation pipeline")
         translation_result = await orchestrator.translate(request.text)
+        logger.info(f"Translation completed successfully: output_length={len(translation_result)}")
         
         return TranslateResponse(translation=translation_result)
         
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Translation failed: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={
